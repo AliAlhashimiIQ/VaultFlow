@@ -1,21 +1,65 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ============================================================
+# VaultFlow ProGuard/R8 Rules — Production Release
+# ============================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- General Android & Kotlin ---
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep Kotlin Metadata for reflection
+-keep class kotlin.Metadata { *; }
+-dontwarn kotlin.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- Room Database ---
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-keepclassmembers class * {
+    @androidx.room.* <methods>;
+}
+
+# Keep Room entity constructors and fields
+-keepclassmembers @androidx.room.Entity class * {
+    <init>(...);
+    <fields>;
+}
+
+# --- Compose ---
+-dontwarn androidx.compose.**
+-keep class androidx.compose.** { *; }
+
+# --- Coroutines ---
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory { *; }
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler { *; }
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+
+# --- AndroidX Lifecycle ---
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+-keepclassmembers class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# --- JSON Parsing (org.json — standard Android, no rules needed) ---
+# org.json is part of the Android framework and not subject to R8.
+
+# --- FileProvider ---
+-keep class androidx.core.content.FileProvider { *; }
+
+# --- Prevent stripping of data classes used by Room ---
+-keep class com.example.data.local.entity.** { *; }
+-keep class com.example.data.local.dao.** { *; }
+-keep class com.example.data.local.AppDatabase { *; }
+-keep class com.example.data.repository.** { *; }
+
+# --- Enums (keep for Room string matching and UI usage) ---
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+    public static ** entries;
+}

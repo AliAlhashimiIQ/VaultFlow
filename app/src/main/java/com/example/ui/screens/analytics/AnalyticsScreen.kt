@@ -124,7 +124,7 @@ fun AnalyticsScreen(
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    AnalyticsViewTab.values().forEach { tab ->
+                    AnalyticsViewTab.entries.forEach { tab ->
                         val isSelected = selectedTab == tab
                         Surface(
                             onClick = { selectedTab = tab },

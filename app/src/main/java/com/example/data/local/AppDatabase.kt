@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.local.dao.CategoryDao
 import com.example.data.local.dao.SavingsGoalDao
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
         UserSettingsEntity::class
     ],
     version = 2,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
@@ -44,11 +45,53 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "finance_tracker_db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(DatabaseCallback())
                     .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        // Migration from schema v1 to v2:
+        // - Adds savingsGoalId and savingsGoalTitle columns to transactions table
+        // - Creates savings_goals table
+        // - Creates user_settings table
+        // IMPORTANT: For any future schema changes, add a new Migration object here.
+        // NEVER use fallbackToDestructiveMigration() — it wipes all user financial data.
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add savings-related columns to transactions
+                db.execSQL("ALTER TABLE transactions ADD COLUMN savingsGoalId INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN savingsGoalTitle TEXT DEFAULT NULL")
+
+                // Create savings_goals table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS savings_goals (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        title TEXT NOT NULL,
+                        targetAmount REAL NOT NULL,
+                        currentAmount REAL NOT NULL DEFAULT 0.0,
+                        iconName TEXT NOT NULL DEFAULT 'savings',
+                        colorHex TEXT NOT NULL DEFAULT '#34D399',
+                        targetDate INTEGER,
+                        isCompleted INTEGER NOT NULL DEFAULT 0,
+                        createdAt INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent())
+
+                // Create user_settings table
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS user_settings (
+                        id INTEGER PRIMARY KEY NOT NULL,
+                        currencyCode TEXT NOT NULL DEFAULT 'IQD',
+                        currencySymbol TEXT NOT NULL DEFAULT 'IQD',
+                        monthlyBudget REAL NOT NULL DEFAULT 0.0,
+                        isSetupCompleted INTEGER NOT NULL DEFAULT 1,
+                        themeMode TEXT NOT NULL DEFAULT 'SYSTEM',
+                        accentTheme TEXT NOT NULL DEFAULT 'INDIGO'
+                    )
+                """.trimIndent())
             }
         }
 

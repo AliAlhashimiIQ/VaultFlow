@@ -69,7 +69,7 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NavTab.values().forEach { tab ->
+                    NavTab.entries.forEach { tab ->
                         val isSelected = tab == currentTab
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,

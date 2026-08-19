@@ -207,7 +207,7 @@ fun HistoryScreen(
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                TransactionTypeFilter.values().forEach { filter ->
+                TransactionTypeFilter.entries.forEach { filter ->
                     val isSelected = selectedTypeFilter == filter
                     Surface(
                         onClick = { viewModel.setTypeFilter(filter) },

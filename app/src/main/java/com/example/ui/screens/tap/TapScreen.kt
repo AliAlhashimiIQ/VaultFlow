@@ -3,8 +3,10 @@ package com.example.ui.screens.tap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -559,8 +563,12 @@ private fun KeypadButton(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
+    val haptic = LocalHapticFeedback.current
     Surface(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         shape = RoundedCornerShape(16.dp),
         color = extendedColors.keypadKey,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
@@ -580,6 +588,7 @@ private fun KeypadButton(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun KeypadIconButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -588,14 +597,25 @@ private fun KeypadIconButton(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
+    val haptic = LocalHapticFeedback.current
     Surface(
-        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = extendedColors.keypadKey,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         shadowElevation = 0.5.dp,
         modifier = modifier
             .height(56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .combinedClickable(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
+            )
             .testTag("keypad_backspace")
     ) {
         Box(contentAlignment = Alignment.Center) {
