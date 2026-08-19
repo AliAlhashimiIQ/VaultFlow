@@ -92,15 +92,44 @@ fun TapScreen(
         }
     }
 
-    val displayCategories = if (transactionType == TransactionType.INCOME) {
-        categories.filter { it.isIncome }
-    } else {
-        categories.filter { !it.isIncome }
+    val displayCategories = remember(transactionType, categories) {
+        val filtered = if (transactionType == TransactionType.INCOME) {
+            categories.filter { it.isIncome }
+        } else {
+            categories.filter { !it.isIncome }
+        }
+        if (filtered.isNotEmpty()) {
+            filtered
+        } else {
+            if (transactionType == TransactionType.INCOME) {
+                listOf(
+                    CategoryEntity(name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true, isDefault = true),
+                    CategoryEntity(name = "Freelance", iconName = "laptop", colorHex = "#06B6D4", isIncome = true, isDefault = true),
+                    CategoryEntity(name = "Investments", iconName = "trending_up", colorHex = "#3B82F6", isIncome = true, isDefault = true),
+                    CategoryEntity(name = "Bonus / Gift", iconName = "redeem", colorHex = "#F59E0B", isIncome = true, isDefault = true),
+                    CategoryEntity(name = "Other Income", iconName = "account_balance_wallet", colorHex = "#8B5CF6", isIncome = true, isDefault = true)
+                )
+            } else {
+                listOf(
+                    CategoryEntity(name = "Groceries", iconName = "shopping_cart", colorHex = "#10B981", isIncome = false, isDefault = true),
+                    CategoryEntity(name = "Dining Out", iconName = "restaurant", colorHex = "#F59E0B", isIncome = false, isDefault = true),
+                    CategoryEntity(name = "Transport", iconName = "directions_car", colorHex = "#3B82F6", isIncome = false, isDefault = true),
+                    CategoryEntity(name = "Other", iconName = "category", colorHex = "#64748B", isIncome = false, isDefault = true)
+                )
+            }
+        }
     }
 
-    LaunchedEffect(transactionType, savingsGoals) {
-        if (transactionType == TransactionType.SAVINGS_DEPOSIT && selectedGoal == null && savingsGoals.isNotEmpty()) {
-            viewModel.setTapGoal(savingsGoals.first())
+    LaunchedEffect(transactionType, displayCategories) {
+        if (transactionType == TransactionType.SAVINGS_DEPOSIT) {
+            if (selectedGoal == null && savingsGoals.isNotEmpty()) {
+                viewModel.setTapGoal(savingsGoals.first())
+            }
+        } else {
+            // If current selected category doesn't match the active type (e.g. was expense, now income), select first valid category
+            if (displayCategories.isNotEmpty() && (selectedCategory == null || displayCategories.none { it.id == selectedCategory?.id })) {
+                viewModel.setTapCategory(displayCategories.first())
+            }
         }
     }
 
@@ -372,10 +401,10 @@ fun TapScreen(
                         onClick = { viewModel.onNumpadAddPreset(preset) },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                         modifier = Modifier
                             .weight(1f)
-                            .height(34.dp)
+                            .height(36.dp)
                             .testTag("preset_${preset.toInt()}")
                     ) {
                         Box(contentAlignment = Alignment.Center) {

@@ -207,12 +207,57 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AnalyticsState())
 
     init {
-        // Initialize default category selection when categories load
-        viewModelScope.launch {
+        // Ensure default categories (both expenses and income) exist and sync tap category
+        viewModelScope.launch(Dispatchers.IO) {
             allCategories.collect { categories ->
-                if (_tapSelectedCategory.value == null && categories.isNotEmpty()) {
-                    val defaultExpense = categories.firstOrNull { !it.isIncome } ?: categories.first()
-                    _tapSelectedCategory.value = defaultExpense
+                if (categories.isNotEmpty()) {
+                    // If no income categories exist in the database, seed them automatically
+                    val hasIncome = categories.any { it.isIncome }
+                    if (!hasIncome) {
+                        val defaultIncomeCategories = listOf(
+                            CategoryEntity(name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true, isDefault = true, sortOrder = 1),
+                            CategoryEntity(name = "Freelance", iconName = "laptop", colorHex = "#06B6D4", isIncome = true, isDefault = true, sortOrder = 2),
+                            CategoryEntity(name = "Investments", iconName = "trending_up", colorHex = "#3B82F6", isIncome = true, isDefault = true, sortOrder = 3),
+                            CategoryEntity(name = "Bonus / Gift", iconName = "redeem", colorHex = "#F59E0B", isIncome = true, isDefault = true, sortOrder = 4),
+                            CategoryEntity(name = "Other Income", iconName = "account_balance_wallet", colorHex = "#8B5CF6", isIncome = true, isDefault = true, sortOrder = 5)
+                        )
+                        for (cat in defaultIncomeCategories) {
+                            repository.insertCategory(cat)
+                        }
+                    }
+
+                    // Auto-fix any past miscategorized income records (e.g. if they had an expense category like Transport)
+                    val txList = allTransactions.value
+                    val validIncomeCat = categories.firstOrNull { it.isIncome }
+                    if (validIncomeCat != null) {
+                        for (tx in txList) {
+                            if (tx.type == "INCOME") {
+                                val currentCat = categories.firstOrNull { it.id == tx.categoryId }
+                                if (currentCat == null || !currentCat.isIncome) {
+                                    val fixedTx = tx.copy(
+                                        categoryId = validIncomeCat.id,
+                                        categoryName = validIncomeCat.name,
+                                        categoryIcon = validIncomeCat.iconName,
+                                        categoryColor = validIncomeCat.colorHex
+                                    )
+                                    repository.updateTransaction(fixedTx)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Initialize or validate current selected category
+                val currentType = _tapTransactionType.value
+                val currentCat = _tapSelectedCategory.value
+                if (currentType == TransactionType.INCOME) {
+                    if (currentCat == null || !currentCat.isIncome) {
+                        _tapSelectedCategory.value = categories.firstOrNull { it.isIncome }
+                    }
+                } else if (currentType == TransactionType.EXPENSE) {
+                    if (currentCat == null || currentCat.isIncome) {
+                        _tapSelectedCategory.value = categories.firstOrNull { !it.isIncome }
+                    }
                 }
             }
         }
@@ -269,9 +314,15 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val categories = allCategories.value
             if (type == TransactionType.INCOME) {
-                _tapSelectedCategory.value = categories.firstOrNull { it.isIncome } ?: categories.firstOrNull()
+                val incomeCats = categories.filter { it.isIncome }
+                _tapSelectedCategory.value = incomeCats.firstOrNull() ?: CategoryEntity(
+                    name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true, isDefault = true
+                )
             } else if (type == TransactionType.EXPENSE) {
-                _tapSelectedCategory.value = categories.firstOrNull { !it.isIncome } ?: categories.firstOrNull()
+                val expenseCats = categories.filter { !it.isIncome }
+                _tapSelectedCategory.value = expenseCats.firstOrNull() ?: CategoryEntity(
+                    name = "Other", iconName = "category", colorHex = "#F43F5E", isIncome = false, isDefault = true
+                )
             } else if (type == TransactionType.SAVINGS_DEPOSIT) {
                 val goals = allSavingsGoals.value
                 _tapSelectedGoal.value = goals.firstOrNull()
@@ -318,11 +369,35 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
 
         viewModelScope.launch {
             when (type) {
-                TransactionType.EXPENSE, TransactionType.INCOME -> {
-                    val cat = _tapSelectedCategory.value ?: return@launch
+                TransactionType.EXPENSE -> {
+                    val categories = allCategories.value
+                    val expenseCats = categories.filter { !it.isIncome }
+                    val cat = _tapSelectedCategory.value?.takeIf { !it.isIncome }
+                        ?: expenseCats.firstOrNull()
+                        ?: CategoryEntity(name = "Other", iconName = "category", colorHex = "#F43F5E", isIncome = false)
+
                     val tx = TransactionEntity(
                         amount = amount,
-                        type = type.name,
+                        type = TransactionType.EXPENSE.name,
+                        categoryId = cat.id,
+                        categoryName = cat.name,
+                        categoryIcon = cat.iconName,
+                        categoryColor = cat.colorHex,
+                        note = note,
+                        timestamp = timestamp
+                    )
+                    repository.insertTransaction(tx)
+                }
+                TransactionType.INCOME -> {
+                    val categories = allCategories.value
+                    val incomeCats = categories.filter { it.isIncome }
+                    val cat = _tapSelectedCategory.value?.takeIf { it.isIncome }
+                        ?: incomeCats.firstOrNull()
+                        ?: CategoryEntity(name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true)
+
+                    val tx = TransactionEntity(
+                        amount = amount,
+                        type = TransactionType.INCOME.name,
                         categoryId = cat.id,
                         categoryName = cat.name,
                         categoryIcon = cat.iconName,
@@ -333,7 +408,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     repository.insertTransaction(tx)
                 }
                 TransactionType.SAVINGS_DEPOSIT -> {
-                    val goal = _tapSelectedGoal.value ?: return@launch
+                    val goals = allSavingsGoals.value
+                    val goal = _tapSelectedGoal.value ?: goals.firstOrNull() ?: return@launch
                     val tx = TransactionEntity(
                         amount = amount,
                         type = TransactionType.SAVINGS_DEPOSIT.name,
@@ -1096,7 +1172,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         val incomeCategoryMap = mutableMapOf<String, Triple<Double, Int, Pair<String, String>>>()
 
         for (tx in periodTransactions) {
-            val matchedCat = categories.firstOrNull { it.id == tx.categoryId || it.name.equals(tx.categoryName, ignoreCase = true) }
+            val isInc = tx.type == "INCOME"
+            val matchedCat = categories.firstOrNull { it.isIncome == isInc && (it.id == tx.categoryId || it.name.equals(tx.categoryName, ignoreCase = true)) }
+                ?: categories.firstOrNull { it.name.equals(tx.categoryName, ignoreCase = true) }
             val catName = matchedCat?.name ?: tx.categoryName
             val catIcon = matchedCat?.iconName ?: tx.categoryIcon
             val catColor = matchedCat?.colorHex ?: tx.categoryColor

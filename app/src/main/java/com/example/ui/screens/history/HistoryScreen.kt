@@ -298,29 +298,51 @@ fun HistoryScreen(
             }
         }
 
-        // --- SUB-HEADER: TRANSACTION COUNT & FILTER TOTAL ---
-        Row(
+        // --- SUB-HEADER: TRANSACTION SUMMARY HERO CARD ---
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = extendedColors.cardBackground,
+            border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
         ) {
-            Text(
-                text = "${transactions.size} Record${if (transactions.size != 1) "s" else ""}",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = when (selectedTypeFilter) {
+                            TransactionTypeFilter.INCOME -> "Total Income"
+                            TransactionTypeFilter.SAVINGS -> "Total In Vaults"
+                            TransactionTypeFilter.EXPENSES -> "Total Expenses"
+                            TransactionTypeFilter.ALL -> "Net Period Total"
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${transactions.size} Record${if (transactions.size != 1) "s" else ""}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                }
 
-            val totalPrefix = if (selectedTypeFilter == TransactionTypeFilter.INCOME) "Earned: +" else "Total: "
-            val totalColor = if (selectedTypeFilter == TransactionTypeFilter.INCOME) extendedColors.incomeGreen else MaterialTheme.colorScheme.onSurface
-            Text(
-                text = "$totalPrefix${CurrencyHelper.formatCurrency(totalAmount, settings.currencyCode, settings.currencySymbol)}",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = totalColor
-            )
+                val isIncomeFilter = selectedTypeFilter == TransactionTypeFilter.INCOME
+                val totalPrefix = if (isIncomeFilter) "+" else ""
+                val totalColor = if (isIncomeFilter) extendedColors.incomeGreen else MaterialTheme.colorScheme.onSurface
+                Text(
+                    text = "$totalPrefix${CurrencyHelper.formatCurrency(totalAmount, settings.currencyCode, settings.currencySymbol)}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = totalColor
+                )
+            }
         }
 
         // --- TRANSACTIONS LIST ---
@@ -333,13 +355,13 @@ fun HistoryScreen(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.ReceiptLong,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(56.dp)
                     )
                     Text(
                         text = "No records found",
@@ -349,7 +371,7 @@ fun HistoryScreen(
                     )
                     Text(
                         text = "Try switching period filters or add a new transaction.",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -364,28 +386,42 @@ fun HistoryScreen(
                 groupedTransactions.forEach { (dateKey, itemsInDate) ->
                     item(key = "header_$dateKey") {
                         val headerLabel = formatHeaderDate(dateKey)
-                        val daySum = itemsInDate.filter { it.type != "INCOME" }.sumOf { it.amount }
+                        val dayExpenses = itemsInDate.filter { it.type != "INCOME" }.sumOf { it.amount }
+                        val dayIncome = itemsInDate.filter { it.type == "INCOME" }.sumOf { it.amount }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 4.dp, vertical = 6.dp),
+                                .padding(horizontal = 4.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = headerLabel.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 letterSpacing = 0.8.sp
                             )
-                            if (daySum > 0) {
-                                Text(
-                                    text = CurrencyHelper.formatCurrency(daySum, settings.currencyCode, settings.currencySymbol),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (dayIncome > 0) {
+                                    Text(
+                                        text = "+${CurrencyHelper.formatCurrency(dayIncome, settings.currencyCode, settings.currencySymbol)}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = extendedColors.incomeGreen
+                                    )
+                                }
+                                if (dayExpenses > 0) {
+                                    Text(
+                                        text = "-${CurrencyHelper.formatCurrency(dayExpenses, settings.currencyCode, settings.currencySymbol)}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = extendedColors.expenseRed
+                                    )
+                                }
                             }
                         }
                     }
@@ -443,19 +479,39 @@ private fun TransactionRowItem(
     val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
     val formattedTime = remember(transaction.timestamp) { timeFormat.format(Date(transaction.timestamp)) }
 
-    val matchedCategory = remember(categories, transaction.categoryId, transaction.categoryName) {
-        categories.firstOrNull { it.id == transaction.categoryId || it.name.equals(transaction.categoryName, ignoreCase = true) }
-    }
-    val displayIcon = matchedCategory?.iconName ?: transaction.categoryIcon
-    val displayColor = matchedCategory?.colorHex ?: transaction.categoryColor
-    val displayName = matchedCategory?.name ?: transaction.categoryName
-
     val isIncome = transaction.type == "INCOME"
     val isSavings = transaction.type == "SAVINGS_DEPOSIT"
 
+    val matchedCategory = remember(categories, transaction.categoryId, transaction.categoryName, transaction.type) {
+        if (isSavings) {
+            null
+        } else {
+            categories.firstOrNull { it.isIncome == isIncome && (it.id == transaction.categoryId || it.name.equals(transaction.categoryName, ignoreCase = true)) }
+                ?: categories.firstOrNull { it.name.equals(transaction.categoryName, ignoreCase = true) }
+        }
+    }
+    val displayIcon = when {
+        isSavings -> transaction.categoryIcon
+        matchedCategory != null -> matchedCategory.iconName
+        isIncome -> "payments"
+        else -> transaction.categoryIcon
+    }
+    val displayColor = when {
+        isSavings -> transaction.categoryColor
+        matchedCategory != null -> matchedCategory.colorHex
+        isIncome -> "#10B981"
+        else -> transaction.categoryColor
+    }
+    val displayName = when {
+        isSavings -> transaction.categoryName
+        matchedCategory != null -> matchedCategory.name
+        isIncome -> if (transaction.categoryName.isBlank() || transaction.categoryName.equals("Transport", ignoreCase = true)) "Salary" else transaction.categoryName
+        else -> transaction.categoryName
+    }
+
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = extendedColors.cardBackground,
         border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
         modifier = Modifier
@@ -465,7 +521,7 @@ private fun TransactionRowItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -476,39 +532,41 @@ private fun TransactionRowItem(
                 CategoryIconBadge(
                     iconName = displayIcon,
                     colorHex = displayColor,
-                    size = 40,
-                    iconSize = 20
+                    size = 46,
+                    iconSize = 24
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(14.dp))
 
                 Column {
                     Text(
                         text = displayName,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = formattedTime,
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (transaction.note.isNotBlank()) {
                             Text(
                                 text = "•",
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = transaction.note,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -521,7 +579,7 @@ private fun TransactionRowItem(
             Column(horizontalAlignment = Alignment.End) {
                 val sign = when {
                     isIncome -> "+"
-                    isSavings -> "↓"
+                    isSavings -> "↓ "
                     else -> "-"
                 }
                 val amountColor = when {
@@ -532,19 +590,22 @@ private fun TransactionRowItem(
 
                 Text(
                     text = "$sign${CurrencyHelper.formatCurrency(transaction.amount, currencyCode, currencySymbol)}",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = amountColor
                 )
 
+                Spacer(modifier = Modifier.height(2.dp))
+
                 val typeLabel = when {
                     isIncome -> "Income"
-                    isSavings -> "Vault"
+                    isSavings -> "Vault Deposit"
                     else -> "Expense"
                 }
                 Text(
                     text = typeLabel,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

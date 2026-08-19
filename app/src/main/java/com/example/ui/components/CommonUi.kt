@@ -191,8 +191,17 @@ fun EditTransactionDialog(
     val extendedColors = LocalExtendedColors.current
     var amountText by remember { mutableStateOf(transaction.amount.toString().removeSuffix(".0")) }
     var noteText by remember { mutableStateOf(transaction.note) }
+    val isIncome = transaction.type == "INCOME"
+    val relevantCategories = remember(categories, isIncome) {
+        val filtered = categories.filter { it.isIncome == isIncome }
+        if (filtered.isNotEmpty()) filtered else categories
+    }
+
     var selectedCategory by remember {
-        mutableStateOf(categories.find { it.id == transaction.categoryId } ?: categories.firstOrNull())
+        mutableStateOf(
+            relevantCategories.find { it.id == transaction.categoryId || it.name.equals(transaction.categoryName, ignoreCase = true) }
+                ?: relevantCategories.firstOrNull()
+        )
     }
 
     AlertDialog(
@@ -258,7 +267,7 @@ fun EditTransactionDialog(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    categories.forEach { cat ->
+                    relevantCategories.forEach { cat ->
                         val isSelected = selectedCategory?.id == cat.id
                         Surface(
                             onClick = { selectedCategory = cat },
