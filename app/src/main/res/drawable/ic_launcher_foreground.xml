@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Minimalist, Bold, Iconic "V-Flow" Geometry -->
+
+    <!-- Outer Primary Dynamic Flow Wing (Vibrant Emerald Gradient) -->
+    <path
+        android:pathData="M32,42 L54,70 L76,42"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="32"
+                android:startY="42"
+                android:endX="76"
+                android:endY="70"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#059669" />
+                <item android:offset="0.5" android:color="#10B981" />
+                <item android:offset="1.0" android:color="#34D399" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Sleek Upward Currency Flow (Pure White / Mint) -->
+    <path
+        android:pathData="M41,36 L54,52 L67,36"
+        android:strokeWidth="6"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Minimalist Floating Core Accent (Clean Mint Coin Dot) -->
+    <path
+        android:pathData="M54,28 C56.2,28 58,29.8 58,32 C58,34.2 56.2,36 54,36 C51.8,36 50,34.2 50,32 C50,29.8 51.8,28 54,28 Z"
+        android:fillColor="#10B981" />
+
+</vector>

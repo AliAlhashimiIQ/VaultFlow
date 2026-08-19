@@ -1,0 +1,6 @@
+{
+  "name": "VaultFlow",
+  "description": "Smart personal finance tracker, income & expense analytics, savings vaults, and budget manager.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
