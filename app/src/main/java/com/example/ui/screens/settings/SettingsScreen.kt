@@ -644,7 +644,7 @@ fun SettingsScreen(
                                     color = extendedColors.expenseRed
                                 )
                                 Text(
-                                    text = "Restore default categories and seed data",
+                                    text = "Wipe transactions & vaults to a clean ledger",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

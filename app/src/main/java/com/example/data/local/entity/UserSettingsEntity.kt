@@ -12,5 +12,5 @@ data class UserSettingsEntity(
     val monthlyBudget: Double = 0.0,
     val isSetupCompleted: Boolean = true,
     val themeMode: String = "SYSTEM", // "SYSTEM", "LIGHT", "DARK"
-    val accentTheme: String = "INDIGO" // "INDIGO", "BLUE", "VIOLET", "EMERALD", "ROSE"
+    val accentTheme: String = "EMERALD" // "EMERALD", "INDIGO", "BLUE", "VIOLET", "ROSE"
 )

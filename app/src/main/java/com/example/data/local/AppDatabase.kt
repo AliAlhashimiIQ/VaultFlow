@@ -122,7 +122,7 @@ abstract class AppDatabase : RoomDatabase() {
                     monthlyBudget = 150000.0,
                     isSetupCompleted = true,
                     themeMode = "SYSTEM",
-                    accentTheme = "INDIGO"
+                    accentTheme = "EMERALD"
                 )
             )
 
@@ -150,141 +150,8 @@ abstract class AppDatabase : RoomDatabase() {
             )
             categoryDao.insertAllCategories(defaultCategories)
 
-            // Default Savings Goals (Emergency Fund, Vacation, New Laptop)
-            val defaultGoals = listOf(
-                SavingsGoalEntity(
-                    title = "Emergency Fund",
-                    targetAmount = 1000000.0,
-                    currentAmount = 350000.0,
-                    iconName = "shield",
-                    colorHex = "#38BDF8",
-                    targetDate = System.currentTimeMillis() + (90L * 24 * 60 * 60 * 1000)
-                ),
-                SavingsGoalEntity(
-                    title = "New Laptop",
-                    targetAmount = 800000.0,
-                    currentAmount = 520000.0,
-                    iconName = "laptop",
-                    colorHex = "#34D399",
-                    targetDate = System.currentTimeMillis() + (45L * 24 * 60 * 60 * 1000)
-                ),
-                SavingsGoalEntity(
-                    title = "Vacation Trip",
-                    targetAmount = 600000.0,
-                    currentAmount = 180000.0,
-                    iconName = "flight",
-                    colorHex = "#FBBF24",
-                    targetDate = System.currentTimeMillis() + (120L * 24 * 60 * 60 * 1000)
-                )
-            )
-            savingsGoalDao.insertAllSavingsGoals(defaultGoals)
-
-            // Seed a few initial transactions matching the screenshot aesthetic so the app is instantly rich and functional on first launch
-            val now = System.currentTimeMillis()
-            val dayMillis = 24 * 60 * 60 * 1000L
-            val initialTransactions = listOf(
-                TransactionEntity(
-                    amount = 750.0,
-                    type = "EXPENSE",
-                    categoryId = 4,
-                    categoryName = "Market",
-                    categoryIcon = "shopping_cart",
-                    categoryColor = "#EC4899",
-                    note = "Groceries & Milk",
-                    timestamp = now - (2 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 10000.0,
-                    type = "EXPENSE",
-                    categoryId = 3,
-                    categoryName = "Personal",
-                    categoryIcon = "person",
-                    categoryColor = "#38BDF8",
-                    note = "Barber & Grooming",
-                    timestamp = now - (6 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 2000.0,
-                    type = "EXPENSE",
-                    categoryId = 5,
-                    categoryName = "Food",
-                    categoryIcon = "fastfood",
-                    categoryColor = "#FB923C",
-                    note = "Dinner burger",
-                    timestamp = now - dayMillis - (3 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 1000.0,
-                    type = "EXPENSE",
-                    categoryId = 4,
-                    categoryName = "Market",
-                    categoryIcon = "shopping_cart",
-                    categoryColor = "#EC4899",
-                    note = "Snacks & Drinks",
-                    timestamp = now - dayMillis - (5 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 5500.0,
-                    type = "EXPENSE",
-                    categoryId = 5,
-                    categoryName = "Food",
-                    categoryIcon = "fastfood",
-                    categoryColor = "#FB923C",
-                    note = "Lunch meal",
-                    timestamp = now - dayMillis - (7 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 1250.0,
-                    type = "EXPENSE",
-                    categoryId = 6,
-                    categoryName = "Transport",
-                    categoryIcon = "directions_car",
-                    categoryColor = "#2DD4BF",
-                    note = "Taxi ride",
-                    timestamp = now - dayMillis - (9 * 3600 * 1000L)
-                ),
-                TransactionEntity(
-                    amount = 19400.0,
-                    type = "EXPENSE",
-                    categoryId = 1,
-                    categoryName = "Subscription",
-                    categoryIcon = "subscriptions",
-                    categoryColor = "#FACC15",
-                    note = "Cloud & Media Subs",
-                    timestamp = now - (2 * dayMillis)
-                ),
-                TransactionEntity(
-                    amount = 16000.0,
-                    type = "EXPENSE",
-                    categoryId = 2,
-                    categoryName = "Other",
-                    categoryIcon = "category",
-                    categoryColor = "#F43F5E",
-                    note = "Hardware tools",
-                    timestamp = now - (3 * dayMillis)
-                ),
-                TransactionEntity(
-                    amount = 45900.0,
-                    type = "EXPENSE",
-                    categoryId = 6,
-                    categoryName = "Transport",
-                    categoryIcon = "directions_car",
-                    categoryColor = "#2DD4BF",
-                    note = "Car service & fuel",
-                    timestamp = now - (5 * dayMillis)
-                ),
-                TransactionEntity(
-                    amount = 250000.0,
-                    type = "INCOME",
-                    categoryId = 13,
-                    categoryName = "Salary",
-                    categoryIcon = "payments",
-                    categoryColor = "#10B981",
-                    note = "Monthly payment",
-                    timestamp = now - (6 * dayMillis)
-                )
-            )
-            transactionDao.insertAllTransactions(initialTransactions)
+            // Fresh install starts with 0 mock transactions and 0 mock savings goals
+            // Users start with a clean ledger and clean savings vaults
         }
     }
 }

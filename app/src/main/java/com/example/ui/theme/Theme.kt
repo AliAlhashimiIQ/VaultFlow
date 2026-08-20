@@ -61,11 +61,12 @@ val LocalExtendedColors = staticCompositionLocalOf {
 
 fun getAccentColors(accent: String, isDark: Boolean): Pair<Color, Color> {
     return when (accent.uppercase()) {
+        "INDIGO" -> if (isDark) Pair(IndigoPrimaryDark, IndigoContainerDark) else Pair(IndigoPrimaryLight, IndigoContainerLight)
         "BLUE" -> if (isDark) Pair(BluePrimaryDark, BlueContainerDark) else Pair(BluePrimaryLight, BlueContainerLight)
         "VIOLET" -> if (isDark) Pair(VioletPrimaryDark, VioletContainerDark) else Pair(VioletPrimaryLight, VioletContainerLight)
-        "EMERALD" -> if (isDark) Pair(EmeraldPrimaryDark, EmeraldContainerDark) else Pair(EmeraldPrimaryLight, EmeraldContainerLight)
         "ROSE" -> if (isDark) Pair(RosePrimaryDark, RoseContainerDark) else Pair(RosePrimaryLight, RoseContainerLight)
-        else -> if (isDark) Pair(IndigoPrimaryDark, IndigoContainerDark) else Pair(IndigoPrimaryLight, IndigoContainerLight)
+        "EMERALD", "TEAL" -> if (isDark) Pair(EmeraldPrimaryDark, EmeraldContainerDark) else Pair(EmeraldPrimaryLight, EmeraldContainerLight)
+        else -> if (isDark) Pair(EmeraldPrimaryDark, EmeraldContainerDark) else Pair(EmeraldPrimaryLight, EmeraldContainerLight)
     }
 }
 
@@ -176,7 +177,7 @@ fun createExtendedColors(isDark: Boolean): ExtendedColors {
 @Composable
 fun FinanceTrackerTheme(
     themeMode: String = "SYSTEM", // "SYSTEM", "LIGHT", "DARK"
-    accentTheme: String = "INDIGO",
+    accentTheme: String = "EMERALD",
     content: @Composable () -> Unit
 ) {
     val systemInDark = isSystemInDarkTheme()

@@ -21,6 +21,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -132,18 +135,18 @@ fun TapScreen(
         } else {
             if (transactionType == TransactionType.INCOME) {
                 listOf(
-                    CategoryEntity(name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true, isDefault = true),
-                    CategoryEntity(name = "Freelance", iconName = "laptop", colorHex = "#06B6D4", isIncome = true, isDefault = true),
-                    CategoryEntity(name = "Investments", iconName = "trending_up", colorHex = "#3B82F6", isIncome = true, isDefault = true),
-                    CategoryEntity(name = "Bonus / Gift", iconName = "redeem", colorHex = "#F59E0B", isIncome = true, isDefault = true),
-                    CategoryEntity(name = "Other Income", iconName = "account_balance_wallet", colorHex = "#8B5CF6", isIncome = true, isDefault = true)
+                    CategoryEntity(id = -101L, name = "Salary", iconName = "payments", colorHex = "#10B981", isIncome = true, isDefault = true),
+                    CategoryEntity(id = -102L, name = "Freelance", iconName = "laptop", colorHex = "#06B6D4", isIncome = true, isDefault = true),
+                    CategoryEntity(id = -103L, name = "Investments", iconName = "trending_up", colorHex = "#3B82F6", isIncome = true, isDefault = true),
+                    CategoryEntity(id = -104L, name = "Bonus / Gift", iconName = "redeem", colorHex = "#F59E0B", isIncome = true, isDefault = true),
+                    CategoryEntity(id = -105L, name = "Other Income", iconName = "account_balance_wallet", colorHex = "#8B5CF6", isIncome = true, isDefault = true)
                 )
             } else {
                 listOf(
-                    CategoryEntity(name = "Groceries", iconName = "shopping_cart", colorHex = "#10B981", isIncome = false, isDefault = true),
-                    CategoryEntity(name = "Dining Out", iconName = "restaurant", colorHex = "#F59E0B", isIncome = false, isDefault = true),
-                    CategoryEntity(name = "Transport", iconName = "directions_car", colorHex = "#3B82F6", isIncome = false, isDefault = true),
-                    CategoryEntity(name = "Other", iconName = "category", colorHex = "#64748B", isIncome = false, isDefault = true)
+                    CategoryEntity(id = -1L, name = "Groceries", iconName = "shopping_cart", colorHex = "#10B981", isIncome = false, isDefault = true),
+                    CategoryEntity(id = -2L, name = "Dining Out", iconName = "restaurant", colorHex = "#F59E0B", isIncome = false, isDefault = true),
+                    CategoryEntity(id = -3L, name = "Transport", iconName = "directions_car", colorHex = "#3B82F6", isIncome = false, isDefault = true),
+                    CategoryEntity(id = -4L, name = "Other", iconName = "category", colorHex = "#64748B", isIncome = false, isDefault = true)
                 )
             }
         }
@@ -156,7 +159,7 @@ fun TapScreen(
             }
         } else {
             // If current selected category doesn't match the active type (e.g. was expense, now income), select first valid category
-            if (displayCategories.isNotEmpty() && (selectedCategory == null || displayCategories.none { it.id == selectedCategory?.id })) {
+            if (displayCategories.isNotEmpty() && (selectedCategory == null || displayCategories.none { it.id == selectedCategory?.id && it.name == selectedCategory?.name })) {
                 viewModel.setTapCategory(displayCategories.first())
             }
         }
@@ -293,13 +296,15 @@ fun TapScreen(
 
             // --- CATEGORIES / GOALS SELECTOR ROW ---
             if (transactionType == TransactionType.SAVINGS_DEPOSIT) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    savingsGoals.forEach { goal ->
+                    items(
+                        items = savingsGoals,
+                        key = { if (it.id != 0L) "goal_${it.id}" else "goal_${it.title}_${it.colorHex}" }
+                    ) { goal ->
                         val isSelected = selectedGoal?.id == goal.id
                         GoalChip(
                             goal = goal,
@@ -309,13 +314,15 @@ fun TapScreen(
                     }
                 }
             } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    displayCategories.forEach { category ->
+                    items(
+                        items = displayCategories,
+                        key = { if (it.id != 0L) "cat_${it.id}" else "cat_${it.name}_${it.isIncome}" }
+                    ) { category ->
                         val isSelected = selectedCategory?.id == category.id
                         CategoryChip(
                             category = category,
@@ -579,24 +586,19 @@ private fun CategoryChip(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.03f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "chip_scale"
-    )
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else extendedColors.cardBackground,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
-        shadowElevation = if (isSelected) 2.dp else 0.dp,
+        border = if (isSelected) {
+            androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
+        },
+        shadowElevation = if (isSelected) 1.dp else 0.dp,
         modifier = Modifier
             .height(40.dp)
-            .scale(scale)
             .testTag("category_chip_${category.name.lowercase()}")
     ) {
         Row(
@@ -627,24 +629,19 @@ private fun GoalChip(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.03f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "goal_chip_scale"
-    )
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else extendedColors.cardBackground,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
-        shadowElevation = if (isSelected) 2.dp else 0.dp,
+        border = if (isSelected) {
+            androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
+        },
+        shadowElevation = if (isSelected) 1.dp else 0.dp,
         modifier = Modifier
             .height(40.dp)
-            .scale(scale)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
