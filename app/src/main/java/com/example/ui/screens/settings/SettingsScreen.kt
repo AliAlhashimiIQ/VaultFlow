@@ -143,11 +143,12 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(22.dp),
                 colors = CardDefaults.cardColors(containerColor = extendedColors.cardBackground),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(18.dp)) {
                     // Theme Mode Selector
                     Text(
                         text = "Theme Mode",
@@ -155,12 +156,12 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp))
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -174,9 +175,9 @@ fun SettingsScreen(
                             val isSelected = settings.themeMode.equals(modeKey, ignoreCase = true)
                             Surface(
                                 onClick = { viewModel.updateThemeMode(modeKey) },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                                shadowElevation = if (isSelected) 2.dp else 0.dp,
+                                shadowElevation = if (isSelected) 1.5.dp else 0.dp,
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(38.dp)
@@ -213,21 +214,27 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Accent Palette",
+                            text = "Accent Theme Palette",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                        Text(
+                            text = settings.accentTheme.lowercase().replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     val accentOptions = listOf(
-                        Triple("INDIGO", "Indigo", Color(0xFF4F46E5)),
-                        Triple("BLUE", "Azure", Color(0xFF2563EB)),
-                        Triple("VIOLET", "Violet", Color(0xFF7C3AED)),
-                        Triple("EMERALD", "Teal", Color(0xFF0D9488)),
-                        Triple("ROSE", "Rose", Color(0xFFE11D48))
+                        Triple("INDIGO", "Cobalt", Color(0xFF4338CA)),
+                        Triple("BLUE", "Azure", Color(0xFF1D4ED8)),
+                        Triple("VIOLET", "Amethyst", Color(0xFF6D28D9)),
+                        Triple("EMERALD", "Teal Jade", Color(0xFF0F766E)),
+                        Triple("ROSE", "Crimson", Color(0xFFBE123C))
                     )
 
                     Row(
@@ -240,37 +247,35 @@ fun SettingsScreen(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(14.dp))
                                     .clickable { viewModel.updateAccentTheme(key) }
                                     .padding(4.dp)
                             ) {
                                 Box(
+                                    contentAlignment = Alignment.Center,
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(42.dp)
                                         .clip(CircleShape)
                                         .background(col)
-                                        .then(
-                                            if (isSelected) {
-                                                Modifier.border(2.5.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                        .border(
+                                            width = if (isSelected) 3.dp else 1.dp,
+                                            color = if (isSelected) Color.White else col.copy(alpha = 0.4f),
+                                            shape = CircleShape
+                                        )
                                 ) {
                                     if (isSelected) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(10.dp)
-                                                .clip(CircleShape)
-                                                .background(Color.White)
+                                        Icon(
+                                            imageVector = Icons.Rounded.CheckCircle,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = name,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                                 )

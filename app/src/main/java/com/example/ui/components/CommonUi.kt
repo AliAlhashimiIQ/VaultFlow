@@ -68,9 +68,9 @@ fun FilterPillGroup(
             val isSelected = filter == selectedPeriod
             Surface(
                 onClick = { onPeriodSelected(filter) },
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+                border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
                 modifier = Modifier
                     .weight(1f)
                     .height(36.dp)
@@ -98,43 +98,50 @@ fun FilterPillGroup(
 fun CategoryIconBadge(
     iconName: String,
     colorHex: String,
-    modifier: Modifier = Modifier,
-    size: Int = 40,
-    iconSize: Int = 20
+    size: Int = 36,
+    iconSize: Int = 20,
+    modifier: Modifier = Modifier
 ) {
-    val baseColor = CategoryIconMapper.parseColor(colorHex)
+    val icon = CategoryIconMapper.getIcon(iconName)
+    val parsedColor = try {
+        Color(android.graphics.Color.parseColor(colorHex))
+    } catch (e: Exception) {
+        MaterialTheme.colorScheme.primary
+    }
+
     Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(baseColor.copy(alpha = 0.16f))
-            .border(1.dp, baseColor.copy(alpha = 0.35f), CircleShape),
-        contentAlignment = Alignment.Center
+            .background(parsedColor.copy(alpha = 0.16f))
+            .border(1.dp, parsedColor.copy(alpha = 0.28f), CircleShape)
     ) {
         Icon(
-            imageVector = CategoryIconMapper.getIcon(iconName),
+            imageVector = icon,
             contentDescription = null,
-            tint = baseColor,
+            tint = parsedColor,
             modifier = Modifier.size(iconSize.dp)
         )
     }
 }
 
 @Composable
-fun MetricCard(
+fun StatCard(
     title: String,
     value: String,
-    modifier: Modifier = Modifier,
     subtitle: String? = null,
+    icon: ImageVector? = null,
     accentColor: Color = MaterialTheme.colorScheme.primary,
-    icon: ImageVector? = null
+    modifier: Modifier = Modifier
 ) {
     val extendedColors = LocalExtendedColors.current
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = extendedColors.cardBackground),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp),
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier

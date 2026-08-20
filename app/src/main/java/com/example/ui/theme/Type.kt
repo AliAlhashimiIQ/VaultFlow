@@ -13,105 +13,104 @@ val Typography = Typography(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
         fontSize = 44.sp,
-        lineHeight = 52.sp,
-        letterSpacing = (-0.5).sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-1.0).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.25).sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.75).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     displaySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 26.sp,
-        lineHeight = 32.sp,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.5).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     headlineLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = (-0.3).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
+        fontSize = 19.sp,
+        lineHeight = 25.sp,
+        letterSpacing = (-0.2).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     headlineSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontSize = 17.sp,
+        lineHeight = 23.sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontSize = 17.sp,
+        lineHeight = 23.sp,
+        letterSpacing = (-0.2).sp,
         fontFeatureSettings = FinancialFontFeatureSettings
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 22.sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+        lineHeight = 21.sp
     ),
     titleSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
+        fontSize = 13.sp,
+        lineHeight = 18.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
+        fontSize = 15.sp,
+        lineHeight = 22.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
+        fontSize = 13.sp,
+        lineHeight = 19.sp
     ),
     bodySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
+        fontSize = 11.sp,
+        lineHeight = 15.sp
     ),
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        fontSize = 13.sp,
+        lineHeight = 18.sp
     ),
     labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontSize = 11.sp,
+        lineHeight = 15.sp
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Bold,
         fontSize = 10.sp,
-        lineHeight = 14.sp,
+        lineHeight = 13.sp,
         letterSpacing = 0.5.sp
     )
 )

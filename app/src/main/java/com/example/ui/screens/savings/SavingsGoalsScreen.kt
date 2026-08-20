@@ -52,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +75,7 @@ fun SavingsGoalsScreen(
     val goals by viewModel.allSavingsGoals.collectAsStateWithLifecycle()
     val settings by viewModel.userSettings.collectAsStateWithLifecycle()
     val extendedColors = LocalExtendedColors.current
+    val haptic = LocalHapticFeedback.current
 
     var showCreateGoalDialog by remember { mutableStateOf(false) }
     var selectedGoalForDeposit by remember { mutableStateOf<SavingsGoalEntity?>(null) }
@@ -89,56 +92,87 @@ fun SavingsGoalsScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // --- TITLE ---
+        // --- EXECUTIVE HEADER ---
         item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, start = 4.dp, end = 4.dp),
+                    .padding(top = 16.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
-                        text = "FINANCIAL TARGETS",
+                        text = "WEALTH ACCUMULATION",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        letterSpacing = 1.sp
+                        color = extendedColors.textMuted,
+                        letterSpacing = 1.2.sp
                     )
                     Text(
-                        text = "Savings Goals",
+                        text = "Savings Vaults",
                         style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
-                Button(
-                    onClick = { showCreateGoalDialog = true },
+                Surface(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        showCreateGoalDialog = true
+                    },
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    color = MaterialTheme.colorScheme.primary,
+                    shadowElevation = 4.dp,
                     modifier = Modifier.testTag("create_new_goal_button")
                 ) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("New Goal", fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("New Vault", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                    }
                 }
             }
         }
 
-        // --- HERO SUMMARY CARD: Total Saved in Vaults ---
+        // --- LUXURY VAULT HERO OVERVIEW CARD (Dynamic to Active Theme Palette) ---
         item {
+            val primaryColor = MaterialTheme.colorScheme.primary
+            val heroGradient = if (extendedColors.isDark) {
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        primaryColor.copy(alpha = 0.18f),
+                        extendedColors.cardBackground
+                    )
+                )
+            } else {
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        primaryColor.copy(alpha = 0.08f),
+                        extendedColors.cardBackground
+                    )
+                )
+            }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = extendedColors.cardHero),
-                border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.cardHeroBorder)
+                shape = RoundedCornerShape(26.dp),
+                colors = CardDefaults.cardColors(containerColor = extendedColors.cardBackground),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (extendedColors.isDark) primaryColor.copy(alpha = 0.35f) else primaryColor.copy(alpha = 0.2f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .background(heroGradient)
+                        .padding(22.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -146,111 +180,152 @@ fun SavingsGoalsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text(
-                                text = "TOTAL SAVED IN VAULTS",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = extendedColors.textMuted,
-                                letterSpacing = 1.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = primaryColor.copy(alpha = 0.15f),
+                                    modifier = Modifier.padding(end = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "PORTFOLIO TOTAL",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = primaryColor,
+                                        letterSpacing = 1.sp,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = CurrencyHelper.formatCurrency(totalSaved, settings.currencyCode, settings.currencySymbol),
-                                style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                style = MaterialTheme.typography.displayMedium.copy(fontSize = 34.sp),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                            modifier = Modifier.size(48.dp)
+                        // Circular Progress Donut Badge
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(64.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Shield,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = overallProgress,
+                                animationSpec = tween(400),
+                                label = "overall_vault_progress"
+                            )
+                            androidx.compose.material3.CircularProgressIndicator(
+                                progress = { animatedProgress },
+                                modifier = Modifier.fillMaxSize(),
+                                color = primaryColor,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                strokeWidth = 6.dp,
+                                strokeCap = StrokeCap.Round
+                            )
+                            Text(
+                                text = "${(overallProgress * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = primaryColor
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    val animatedProgress by animateFloatAsState(
-                        targetValue = overallProgress,
-                        animationSpec = tween(200),
-                        label = "vault_progress"
-                    )
-
-                    LinearProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                        strokeCap = StrokeCap.Round
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    // Secondary metrics row
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
                     ) {
-                        Text(
-                            text = "${(overallProgress * 100).toInt()}% of total target",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Target: ${CurrencyHelper.formatCurrency(totalTarget, settings.currencyCode, settings.currencySymbol)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "TARGET ACCUMULATION",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = extendedColors.textMuted,
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = CurrencyHelper.formatCurrency(totalTarget, settings.currencyCode, settings.currencySymbol),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "ACTIVE VAULTS",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = extendedColors.textMuted,
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = "${goals.count { it.currentAmount < it.targetAmount }} in progress / ${goals.size} total",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // --- GOALS LIST ---
+        // --- GOALS LIST SECTION ---
         if (goals.isEmpty()) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = extendedColors.cardBackground),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(36.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Savings,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.size(48.dp)
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = extendedColors.vaultViolet.copy(alpha = 0.15f),
+                            modifier = Modifier.size(60.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Savings,
+                                    contentDescription = null,
+                                    tint = extendedColors.vaultViolet,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "No savings goals created",
+                            text = "No Vaults Created Yet",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Create a goal to start putting money away systematically",
+                            text = "Set up your first emergency fund, travel fund, or investment vault to start stacking wealth systematically.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = extendedColors.textMuted,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
@@ -325,9 +400,16 @@ private fun SavingsGoalCard(
     onEdit: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
-    val progress = (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f)
+    val haptic = LocalHapticFeedback.current
+    val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
     val isCompleted = goal.currentAmount >= goal.targetAmount
     val parsedColor = CategoryIconMapper.parseColor(goal.colorHex)
+
+    val cardBorder = if (isCompleted) {
+        androidx.compose.foundation.BorderStroke(1.5.dp, extendedColors.incomeGreen.copy(alpha = 0.6f))
+    } else {
+        androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
+    }
 
     Card(
         modifier = Modifier
@@ -335,12 +417,13 @@ private fun SavingsGoalCard(
             .testTag("goal_card_${goal.id}"),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = extendedColors.cardBackground),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (isCompleted) extendedColors.incomeGreen.copy(alpha = 0.5f) else extendedColors.borderSubtle)
+        border = cardBorder,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
+                .padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -354,64 +437,74 @@ private fun SavingsGoalCard(
                     CategoryIconBadge(
                         iconName = goal.iconName,
                         colorHex = goal.colorHex,
-                        size = 40,
-                        iconSize = 20
+                        size = 46,
+                        iconSize = 22
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
                             text = goal.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp),
+                            fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         if (isCompleted) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Rounded.CheckCircle,
                                     contentDescription = null,
                                     tint = extendedColors.incomeGreen,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(15.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Goal Achieved!",
+                                    text = "Vault Target Reached!",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = extendedColors.incomeGreen
                                 )
                             }
                         } else {
-                            val remaining = goal.targetAmount - goal.currentAmount
+                            val remaining = (goal.targetAmount - goal.currentAmount).coerceAtLeast(0.0)
                             Text(
-                                text = "${CurrencyHelper.formatCurrency(remaining, currencyCode, currencySymbol)} left",
+                                text = "${CurrencyHelper.formatCurrency(remaining, currencyCode, currencySymbol)} remaining",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.Medium,
+                                color = extendedColors.textMuted
                             )
                         }
                     }
                 }
 
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(32.dp)
+                Surface(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onEdit()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(34.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit Goal",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.Edit,
+                            contentDescription = "Edit Goal",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Amount & Percentage Bar
             val animatedProgress by animateFloatAsState(
                 targetValue = progress,
-                animationSpec = tween(200),
+                animationSpec = tween(300),
                 label = "goal_card_progress"
             )
 
@@ -419,49 +512,78 @@ private fun SavingsGoalCard(
                 progress = { animatedProgress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp)),
                 color = if (isCompleted) extendedColors.incomeGreen else parsedColor,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 strokeCap = StrokeCap.Round
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${CurrencyHelper.formatCurrency(goal.currentAmount, currencyCode, currencySymbol)} / ${CurrencyHelper.formatCurrency(goal.targetAmount, currencyCode, currencySymbol)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "${(progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isCompleted) extendedColors.incomeGreen else parsedColor
-                )
+                Column {
+                    Text(
+                        text = "CURRENT BALANCE",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textMuted,
+                        letterSpacing = 0.8.sp
+                    )
+                    Text(
+                        text = CurrencyHelper.formatCurrency(goal.currentAmount, currencyCode, currencySymbol),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "OF ${CurrencyHelper.formatCurrency(goal.targetAmount, currencyCode, currencySymbol)}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textMuted,
+                        letterSpacing = 0.8.sp
+                    )
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isCompleted) extendedColors.incomeGreen else parsedColor
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Action: Deposit
+            // Action: Fast Deposit Button with tactile click
             Button(
-                onClick = onDeposit,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDeposit()
+                },
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isCompleted) extendedColors.incomeGreen else MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp, pressedElevation = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
+                    .height(46.dp)
                     .testTag("deposit_button_${goal.id}")
             ) {
                 Icon(Icons.Rounded.Payments, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Add Deposit", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isCompleted) "Deposit More" else "Add Deposit",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

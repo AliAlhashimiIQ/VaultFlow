@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+
+    <!-- Outer Primary Dynamic Flow Wing (Vibrant Emerald / Cyan Radiant Flow) -->
+    <path
+        android:pathData="M70,95 L120,155 L170,95"
+        android:strokeWidth="18"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="70"
+                android:startY="95"
+                android:endX="170"
+                android:endY="155"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#059669" />
+                <item android:offset="0.5" android:color="#10B981" />
+                <item android:offset="1.0" android:color="#34D399" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Sleek Upward Currency Flow (Pure White Accent) -->
+    <path
+        android:pathData="M90,82 L120,118 L150,82"
+        android:strokeWidth="12"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Minimalist Floating Core Accent (Mint Coin Dot) -->
+    <path
+        android:pathData="M120,60 C125.5,60 130,64.5 130,70 C130,75.5 125.5,80 120,80 C114.5,80 110,75.5 110,70 C110,64.5 114.5,60 120,60 Z"
+        android:fillColor="#10B981" />
+
+</vector>

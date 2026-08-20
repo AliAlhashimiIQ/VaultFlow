@@ -24,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -303,7 +305,7 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
             color = extendedColors.cardBackground,
             border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle)
         ) {
@@ -317,31 +319,43 @@ fun HistoryScreen(
                 Column {
                     Text(
                         text = when (selectedTypeFilter) {
-                            TransactionTypeFilter.INCOME -> "Total Income"
-                            TransactionTypeFilter.SAVINGS -> "Total In Vaults"
-                            TransactionTypeFilter.EXPENSES -> "Total Expenses"
-                            TransactionTypeFilter.ALL -> "Net Period Total"
+                            TransactionTypeFilter.INCOME -> "TOTAL RECEIVED"
+                            TransactionTypeFilter.SAVINGS -> "TOTAL IN VAULTS"
+                            TransactionTypeFilter.EXPENSES -> "TOTAL EXPENSES"
+                            TransactionTypeFilter.ALL -> "NET PERIOD TOTAL"
                         },
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = extendedColors.textMuted,
+                        letterSpacing = 1.sp
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    val totalPrefix = if (selectedTypeFilter == TransactionTypeFilter.INCOME) "+" else ""
+                    val totalColor = when (selectedTypeFilter) {
+                        TransactionTypeFilter.INCOME -> extendedColors.incomeGreen
+                        TransactionTypeFilter.SAVINGS -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                     Text(
-                        text = "${transactions.size} Record${if (transactions.size != 1) "s" else ""}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        text = "$totalPrefix${CurrencyHelper.formatCurrency(totalAmount, settings.currencyCode, settings.currencySymbol)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = totalColor
                     )
                 }
 
-                val isIncomeFilter = selectedTypeFilter == TransactionTypeFilter.INCOME
-                val totalPrefix = if (isIncomeFilter) "+" else ""
-                val totalColor = if (isIncomeFilter) extendedColors.incomeGreen else MaterialTheme.colorScheme.onSurface
-                Text(
-                    text = "$totalPrefix${CurrencyHelper.formatCurrency(totalAmount, settings.currencyCode, settings.currencySymbol)}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = totalColor
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Text(
+                        text = "${transactions.size} record${if (transactions.size != 1) "s" else ""}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
             }
         }
 

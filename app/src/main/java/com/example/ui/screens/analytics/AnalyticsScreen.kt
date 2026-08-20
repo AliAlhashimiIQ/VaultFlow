@@ -156,18 +156,33 @@ fun AnalyticsScreen(
             AnalyticsViewTab.OVERVIEW -> {
                 // --- NET CASHFLOW HERO CARD ---
                 item {
+                    val heroBrush = if (extendedColors.isDark) {
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color(0xFF1E2A47), Color(0xFF11192E))
+                        )
+                    } else {
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color(0xFFEEF4FF), Color(0xFFE0ECFF))
+                        )
+                    }
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("net_balance_card"),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = extendedColors.cardHero),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, extendedColors.cardHeroBorder)
+                        shape = RoundedCornerShape(26.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (extendedColors.isDark) Color(0xFF384D7A) else Color(0xFFB8D0FA)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp)
+                                .background(heroBrush)
+                                .padding(22.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -179,37 +194,38 @@ fun AnalyticsScreen(
                                         text = "NET CASH FLOW",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = extendedColors.textMuted,
-                                        letterSpacing = 1.sp
+                                        color = if (extendedColors.isDark) Color(0xFF94A3B8) else Color(0xFF475569),
+                                        letterSpacing = 1.2.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     val netColor = if (analytics.netBalance >= 0) extendedColors.incomeGreen else extendedColors.expenseRed
                                     val netSign = if (analytics.netBalance >= 0) "+" else ""
                                     Text(
                                         text = "$netSign${CurrencyHelper.formatCurrency(analytics.netBalance, settings.currencyCode, settings.currencySymbol)}",
-                                        style = MaterialTheme.typography.headlineLarge,
+                                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 32.sp),
                                         fontWeight = FontWeight.Bold,
                                         color = netColor
                                     )
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                    modifier = Modifier.size(48.dp)
+                                    shape = RoundedCornerShape(18.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                                    modifier = Modifier.size(52.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.AccountBalanceWallet,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(26.dp)
                                         )
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
                             // Three Pillars: Earned vs Spent vs In Vaults
                             Row(

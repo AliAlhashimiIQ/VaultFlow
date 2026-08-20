@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+.agents/
+.agents
+skills-lock.json
+*.log
+hs_err_pid*.log
+replay_pid*.log

@@ -1,13 +1,23 @@
 package com.example.ui.screens.tap
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -81,7 +92,25 @@ fun TapScreen(
     val savedEvent by viewModel.transactionSavedEvent.collectAsStateWithLifecycle()
 
     val extendedColors = LocalExtendedColors.current
+    val haptic = LocalHapticFeedback.current
     var showSuccessBanner by remember { mutableStateOf(false) }
+
+    val formattedAmount = try {
+        val num = amountString.toDoubleOrNull() ?: 0.0
+        if (amountString.endsWith(".")) {
+            "${CurrencyHelper.formatCurrency(num, settings.currencyCode, settings.currencySymbol)}."
+        } else {
+            CurrencyHelper.formatCurrency(num, settings.currencyCode, settings.currencySymbol)
+        }
+    } catch (e: Exception) {
+        "${settings.currencySymbol} $amountString"
+    }
+
+    val amountColor = when (transactionType) {
+        TransactionType.EXPENSE -> MaterialTheme.colorScheme.onSurface
+        TransactionType.INCOME -> extendedColors.incomeGreen
+        TransactionType.SAVINGS_DEPOSIT -> extendedColors.vaultViolet
+    }
 
     LaunchedEffect(savedEvent) {
         if (savedEvent) {
@@ -149,17 +178,17 @@ fun TapScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(24.dp))
-                    .padding(3.dp),
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(if (extendedColors.isDark) Color(0xFF141D2E) else Color(0xFFE2E8F0))
+                    .border(1.dp, extendedColors.borderSubtle, RoundedCornerShape(26.dp))
+                    .padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TypeTabButton(
                     title = "Expense",
                     isSelected = transactionType == TransactionType.EXPENSE,
-                    activeBgColor = if (extendedColors.isDark) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary,
-                    activeTextColor = if (extendedColors.isDark) MaterialTheme.colorScheme.onPrimaryContainer else Color.White,
+                    activeBgColor = if (extendedColors.isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary,
+                    activeTextColor = Color.White,
                     onClick = { viewModel.setTapTransactionType(TransactionType.EXPENSE) },
                     modifier = Modifier.weight(1f)
                 )
@@ -181,68 +210,78 @@ fun TapScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Subtitle & Amount
             Text(
                 text = when (transactionType) {
-                    TransactionType.EXPENSE -> "How much did you spend?"
-                    TransactionType.INCOME -> "How much did you earn?"
-                    TransactionType.SAVINGS_DEPOSIT -> "How much to deposit in vault?"
+                    TransactionType.EXPENSE -> "HOW MUCH DID YOU SPEND?"
+                    TransactionType.INCOME -> "HOW MUCH DID YOU EARN?"
+                    TransactionType.SAVINGS_DEPOSIT -> "HOW MUCH TO DEPOSIT IN VAULT?"
                 },
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Display Amount
-            val formattedAmount = try {
-                val num = amountString.toDoubleOrNull() ?: 0.0
-                if (amountString.endsWith(".")) {
-                    "${CurrencyHelper.formatCurrency(num, settings.currencyCode, settings.currencySymbol)}."
-                } else {
-                    CurrencyHelper.formatCurrency(num, settings.currencyCode, settings.currencySymbol)
-                }
-            } catch (e: Exception) {
-                "${settings.currencySymbol} $amountString"
+            // Display Amount Hero Container (CashApp / Linear style animated digits)
+            AnimatedContent(
+                targetState = formattedAmount,
+                transitionSpec = {
+                    if (targetState.length > initialState.length) {
+                        (fadeIn(animationSpec = tween(100)) +
+                         scaleIn(initialScale = 0.92f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)))
+                            .togetherWith(fadeOut(animationSpec = tween(80)))
+                    } else {
+                        fadeIn(animationSpec = tween(100))
+                            .togetherWith(fadeOut(animationSpec = tween(80)) + scaleOut(targetScale = 0.96f))
+                    }
+                },
+                label = "amount_morph"
+            ) { targetText: String ->
+                Text(
+                    text = targetText,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = if (targetText.length > 8) 36.sp else 46.sp,
+                        lineHeight = if (targetText.length > 8) 42.sp else 52.sp
+                    ),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = amountColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .testTag("tap_amount_display")
+                )
             }
 
-            Text(
-                text = formattedAmount,
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontSize = if (amountString.length > 8) 32.sp else 42.sp
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.testTag("tap_amount_display")
-            )
-
-            // Success feedback animation banner
+            // Success feedback animation banner (Spring entrance)
             AnimatedVisibility(
                 visible = showSuccessBanner,
-                enter = fadeIn(),
-                exit = fadeOut()
+                enter = androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(150)) +
+                        androidx.compose.animation.scaleIn(initialScale = 0.85f, animationSpec = androidx.compose.animation.core.spring(dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy)),
+                exit = androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(120))
             ) {
                 Row(
                     modifier = Modifier
                         .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(extendedColors.incomeGreen.copy(alpha = 0.15f))
-                        .border(1.dp, extendedColors.incomeGreen.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(extendedColors.incomeGreen.copy(alpha = 0.18f))
+                        .border(1.dp, extendedColors.incomeGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.CheckCircle,
                         contentDescription = null,
                         tint = extendedColors.incomeGreen,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Saved successfully!",
+                        text = "Saved to Ledger!",
                         style = MaterialTheme.typography.labelMedium,
                         color = extendedColors.incomeGreen,
                         fontWeight = FontWeight.Bold
@@ -458,11 +497,26 @@ fun TapScreen(
             }
         }
 
-        // --- BOTTOM SECTION: Save Button ---
+        // --- BOTTOM SECTION: Save Button (Physical tactile press feedback)
         val canSave = (amountString.toDoubleOrNull() ?: 0.0) > 0.0
+        val saveInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        val isSavePressed by saveInteractionSource.collectIsPressedAsState()
+        val saveScale by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (isSavePressed && canSave) 0.96f else 1.0f,
+            animationSpec = androidx.compose.animation.core.spring(
+                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+            ),
+            label = "save_button_scale"
+        )
+
         Button(
-            onClick = { viewModel.saveTransaction() },
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.saveTransaction()
+            },
             enabled = canSave,
+            interactionSource = saveInteractionSource,
             shape = RoundedCornerShape(20.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = when (transactionType) {
@@ -472,9 +526,14 @@ fun TapScreen(
                 },
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = if (canSave) 3.dp else 0.dp,
+                pressedElevation = 1.dp
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(54.dp)
+                .scale(saveScale)
                 .testTag("save_transaction_button")
         ) {
             Text(
@@ -520,17 +579,28 @@ private fun CategoryChip(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.03f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "chip_scale"
+    )
+
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else extendedColors.cardBackground,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+        shadowElevation = if (isSelected) 2.dp else 0.dp,
         modifier = Modifier
-            .height(42.dp)
+            .height(40.dp)
+            .scale(scale)
             .testTag("category_chip_${category.name.lowercase()}")
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CategoryIconBadge(
@@ -557,15 +627,27 @@ private fun GoalChip(
     onClick: () -> Unit
 ) {
     val extendedColors = LocalExtendedColors.current
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.03f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "goal_chip_scale"
+    )
+
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else extendedColors.cardBackground,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        modifier = Modifier.height(42.dp)
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else androidx.compose.foundation.BorderStroke(1.dp, extendedColors.borderSubtle),
+        shadowElevation = if (isSelected) 2.dp else 0.dp,
+        modifier = Modifier
+            .height(40.dp)
+            .scale(scale)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CategoryIconBadge(
@@ -593,23 +675,40 @@ private fun KeypadButton(
 ) {
     val extendedColors = LocalExtendedColors.current
     val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "keypad_press_scale"
+    )
+
     Surface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
         },
-        shape = RoundedCornerShape(16.dp),
-        color = extendedColors.keypadKey,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shadowElevation = 0.5.dp,
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(18.dp),
+        color = if (isPressed) extendedColors.keypadKeyActive else extendedColors.keypadKey,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isPressed) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else extendedColors.borderSubtle
+        ),
+        shadowElevation = if (isPressed) 0.dp else 1.dp,
         modifier = modifier
-            .height(56.dp)
+            .height(58.dp)
+            .scale(scale)
             .testTag("keypad_$text")
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -627,15 +726,33 @@ private fun KeypadIconButton(
 ) {
     val extendedColors = LocalExtendedColors.current
     val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "keypad_icon_scale"
+    )
+
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = extendedColors.keypadKey,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shadowElevation = 0.5.dp,
+        shape = RoundedCornerShape(18.dp),
+        color = if (isPressed) extendedColors.keypadKeyActive else extendedColors.keypadKey,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isPressed) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else extendedColors.borderSubtle
+        ),
+        shadowElevation = if (isPressed) 0.dp else 1.dp,
         modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(58.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(18.dp))
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onClick()
